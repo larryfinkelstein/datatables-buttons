@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+    </parent>
+    
+    <packaging>jar</packaging>
+    <groupId>org.webjars</groupId>
+    <artifactId>datatables-buttons</artifactId>
+    <version>1.0.3-SNAPSHOT</version>
+    <name>DataTables Buttons</name>
+    <description>WebJar for DataTables Buttons</description>
+    <url>http://webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <upstream.version>1.0.3</upstream.version>
+        <upstream.url>https://github.com/DataTables/Buttons/archive/${upstream.version}.zip</upstream.url>
+        <destSubDir>META-INF/resources/webjars/${project.artifactId}/${upstream.version}</destSubDir>
+        <destDir>${project.build.outputDirectory}/${destSubDir}</destDir>
+		<requirejs>
+			{
+				"paths": { "dataTables.buttons": "dataTables.buttons" }
+			},
+			"shim": {
+				"datatables-select": ["jquery", "datatables"]
+			}
+		</requirejs>
+    </properties>
+
+    <developers>
+        <developer>
+            <id>larryfinkelstein</id>
+            <name>Larry Finkelstein</name>
+            <email>larryf@cspcorp.com</email>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://github.com/DataTables/Buttons</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>http://github.com/webjars/datatables-buttons</url>
+        <connection>scm:git:https://github.com/webjars/datatables-buttons.git</connection>
+        <developerConnection>scm:git:https://github.com/webjars/datatables-buttons.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+            <version>[1.7.0,)</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>datatables</artifactId>
+            <version>[1.10.,)</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>nl.geodienstencentrum.maven</groupId>
+					<artifactId>sass-maven-plugin</artifactId>
+					<version>2.14</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                            	<!-- setproxy proxyhost="proxy-server.bms.com" proxyport="8080"/ -->
+                                <echo message="download archive"/>
+                                <get src="${upstream.url}" dest="${project.build.directory}/${project.artifactId}.zip"/>
+                                <echo message="unzip archive"/>
+                                <unzip src="${project.build.directory}/${project.artifactId}.zip" dest="${project.build.directory}">
+                                	<patternset>
+                                		<exclude name="**/as3/**"/>
+                                		<exclude name="**/docs/**"/>
+                                		<exclude name="**/examples/**"/>
+                                		<exclude name="**/swf/**"/>
+                                		<exclude name="**/*.md"/>
+                                		<exclude name="**/make.sh"/>
+                                		<exclude name="**/License.txt"/>
+                                	</patternset>
+                                </unzip>
+                                <echo message="moving resources"/>
+                                <move todir="${destDir}">
+                                    <fileset dir="${project.build.directory}/Buttons-${upstream.version}">
+                                    	<exclude name="**/*.scss"/>
+                                    </fileset>
+                                </move>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+			<plugin>
+				<groupId>nl.geodienstencentrum.maven</groupId>
+				<artifactId>sass-maven-plugin</artifactId>
+				<version>2.14</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>update-stylesheets</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+					<sassSourceDirectory>${project.build.directory}/Buttons-${upstream.version}/css</sassSourceDirectory>
+					<destination>${destDir}/css</destination>
+                </configuration>
+			</plugin>
+            <plugin>
+                <groupId>com.samaxes.maven</groupId>
+                <artifactId>minify-maven-plugin</artifactId>                   
+                <version>1.7.2</version>
+                <executions>
+                    <execution>
+                        <id>minify</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>minify</goal>
+                        </goals>
+                        <configuration>
+                            <charset>utf-8</charset>
+                            <jsEngine>CLOSURE</jsEngine>
+                            <skipMerge>true</skipMerge>
+                            <nosuffix>false</nosuffix>
+                            <webappSourceDir>${basedir}\target\classes</webappSourceDir>
+                            <webappTargetDir>${basedir}\target\classes</webappTargetDir>
+ 
+                            <cssSourceDir>${destSubDir}/css</cssSourceDir>
+                            <cssTargetDir>${destSubDir}/css</cssTargetDir>
+                            <cssSourceIncludes>
+                                <cssSourceInclude>*.css</cssSourceInclude>
+                            </cssSourceIncludes>
+ 
+                            <jsSourceDir>${destSubDir}/js</jsSourceDir>
+                            <jsTargetDir>${destSubDir}/js</jsTargetDir>
+                            <jsSourceIncludes>
+                                <jsSourceInclude>*.js</jsSourceInclude>
+                            </jsSourceIncludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.1</version>
+            </plugin>
+            <!-- 
+            <plugin>
+                <groupId>com.googlecode.todomap</groupId>
+                <artifactId>maven-jettygzip-plugin</artifactId>
+                <version>0.0.4</version>
+                <configuration>
+                    <webappDirectory>target/classes</webappDirectory>
+                    <outputDirectory>target/classes</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+             -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.5</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>sonatype-nexus-staging</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
